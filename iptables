@@ -1,0 +1,41 @@
+
+# Alguns exemplos que ajudam no dia a dia
+
+# Tabela FILTER, alterando política para drop e liberando as portas desejadas
+iptables -P INPUT DROP
+iptables -I INPUT -p tcp --dport 22 -j ACCEPT
+iptables -A INPUT -p tcp --dport 80 --sport 1024:65535 -j ACCEPT
+iptables -I INPUT -p udp --sport 53 --dport 1024:65535 -j ACCEPT
+
+iptables -P OUTPUT DROP
+iptables -I OUTPUT -p tcp --dport 1024:65535 -j ACCEPT
+iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -I OUTPUT -p udp --dport 53 --sport 1024:65535 -j ACCEPT
+iptables -I OUTPUT -p icmp -j ACCEPT
+
+# Liberando repasse de pacotes entre redes
+echo 1 > /proc/sys/net/ipv4_forward
+
+# Acesso a internet partindo da rede interna
+iptables -t nat -I POSTROUTING -s 192.168.0.0/24 -o eth0 -j SNAT --to 200.204.0.23
+iptables -t nat -I POSTROUTING -s 192.168.0.0/24 -o eth0 -j SNAT --to 200.204.0.23-200.204.0.230
+
+# Especificando o mascaramento da porta 80 para a rede 192.168.0 
+iptables -t nat -I POSTROUTING -p tcp --dport 80 -s 192.168.0.0/24 -o eth0 -j MASQUERADE 
+
+# DNAT
+iptables -t nat -A PREROUTING -p tcp --dport 80 -j DNAT --to 192.168.0.15 
+iptables -t nat -A PREROUTING -p tcp -i eth1 --dport 80 -j DNAT --to 192.168.0.15
+
+# LOAD BALANCING
+iptables -t nat -A PREROUTING -p tcp -i eth0 --dport 80 -j DNAT --to 192.168.0.2-192.168.0.4   
+# Acesso ao LOAD BALANCING pela rede interna
+# Redirecionamento com destino ao $IP e redicionando para servidores internos
+# Mascarando um ip Válido para inválidos
+iptables -t nat -A OUTPUT -d $IP  -p tcp --dport 80 -j DNAT --to 192.168.0.2-192.168.0.4   
+
+# Redirecionamento para proxy
+iptables -t nat -A PREROUTING -p tcp -s 192.168.0.0/24 --dport 80 -j REDIRECT --to-port 3128  
+
+# Bloqueando uma rede para acesso as portas 80 e 443 do servidor local 
+iptables -A INPUT -p tcp -s $REDE --match multiport --dport 80,443 -j DROP
