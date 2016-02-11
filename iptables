@@ -54,3 +54,11 @@ iptables -t mangle -A PREROUTING -i eth0 -j TTL --set-ttl 64 (Alterando TTL a os
 iptables -t mangle -A PREROUTING -i eth0 -j TTL --set-dec 1 (Decrementando 1 nos pacotes que passarem por esse roteador)
 iptables -t mangle -A PREROUTING -i eth0 -j TTL --set-inc 2 (Incrementando 2 nos pacotes que passarem por esse roteador)
 iptables -t mangle -A INPUT -m mark --mark 1 (Marcando pacote) 
+
+# SYN FLOOD Atack
+echo 1 > /proc/sys/net/ipv4/tcp_syncookies
+iptables -A INPUT -p tcp --syn -m limit --limit 5/s -j ACCEPT
+iptables -A INPUT -p tcp --syn -j DROP
+
+# Ping da morte
+iptables -A INPUT -p icmp --icmp-type echo-request -m limit --limit 1/s -j ACCEPT  
