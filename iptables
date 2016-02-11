@@ -39,3 +39,13 @@ iptables -t nat -A PREROUTING -p tcp -s 192.168.0.0/24 --dport 80 -j REDIRECT --
 
 # Bloqueando uma rede para acesso as portas 80 e 443 do servidor local 
 iptables -A INPUT -p tcp -s $REDE --match multiport --dport 80,443 -j DROP
+
+# Logando informações de regras do iptables (syn -j LOG --log-prefix "Comentario")
+# fwlogwatch - ferramenta para tratamento de logs
+# editar /etc/rsyslog.conf e adicionar a linha abaixo.
+kern.warn      -/var/log/firewall
+systemctl reload rsyslog.service
+
+iptables -A INPUT -p tcp ! -s $IP_ORIGEM --dport 22 --syn -j LOG --log-prefix "Acesso via SSH não autorizado"
+
+
