@@ -48,4 +48,9 @@ systemctl reload rsyslog.service
 
 iptables -A INPUT -p tcp ! -s $IP_ORIGEM --dport 22 --syn -j LOG --log-prefix "Acesso via SSH não autorizado"
 
-
+# Tabela Mangle
+iptables -t mangle -A PREROUTING -p tcp --dport 22 -j TOS --set-tos 16 (Setando prioridade altíssima para os pacotes ssh)
+iptables -t mangle -A PREROUTING -i eth0 -j TTL --set-ttl 64 (Alterando TTL a os pacotes)
+iptables -t mangle -A PREROUTING -i eth0 -j TTL --set-dec 1 (Decrementando 1 nos pacotes que passarem por esse roteador)
+iptables -t mangle -A PREROUTING -i eth0 -j TTL --set-inc 2 (Incrementando 2 nos pacotes que passarem por esse roteador)
+iptables -t mangle -A INPUT -m mark --mark 1 (Marcando pacote) 
